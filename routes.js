@@ -200,7 +200,8 @@ module.exports = function(
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const sensor_id = sensor[0].sensor_id;
+            //const sensor_id = sensor[0].sensor_id;
+            // perdon la ordinariez pero no me salia la iteracion del id asiq puse un 1 como id xdd voy a tratar de arreglarlo
 
             // Iniciar transacción
             await queryDuckDB('BEGIN');
@@ -209,7 +210,7 @@ module.exports = function(
                     if (typeof data_key !== 'string' || typeof data_value !== 'string') {
                         throw new Error('Invalid data format');
                     }
-                    await queryDuckDB('INSERT INTO Sensor_Data (sensor_id, data_key, data_value) VALUES ($1, $2, $3)', [sensor_id, data_key, data_value]);
+                    await queryDuckDB('INSERT INTO Sensor_Data (sensor_id, data_key, data_value) VALUES ($1, $2, $3)', [1, data_key, data_value]);
                 }
 
                 // Si todo fue bien, hacer COMMIT
@@ -283,34 +284,43 @@ module.exports = function(
 
     // Crear nuevo sensor
     app.post('/api/v1/sensor', async (req, res) => {
-        const { company_api_key, location_id, sensor_name, sensor_category, sensor_meta } = req.body;
-
-        if (!company_api_key || !location_id || !sensor_name || !sensor_category) {
+        const { company_api_key, location_id, location_name, sensor_name, sensor_category, sensor_meta } = req.body;
+    
+        if (!company_api_key || !location_id || !location_name || !sensor_name || !sensor_category || !sensor_meta) {
             return res.status(400).json({ error: 'Faltan campos requeridos para el sensor' });
         }
-
+    
         try {
             const company = await queryDuckDB('SELECT * FROM Company WHERE company_api_key = $1', [company_api_key]);
             if (company.length === 0) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const sensorApiKey = generateApiKey();
-            await queryDuckDB(
-                'INSERT INTO Sensor (location_id, sensor_name, sensor_category, sensor_meta, sensor_api_key) VALUES ($1, $2, $3, $4, $5)',
-                [location_id, sensor_name, sensor_category, sensor_meta, sensorApiKey]
-            );
+            // async function getNextSensorId() {
+            //     const rows = await queryDuckDB("SELECT nextval('sensor_seq') AS next_id");
+            //     return rows[0].next_id;
+            // }
 
+            // perdon la ordinariez pero no me salia la iteracion del id asiq puse un 1 como id xdd voy a tratar de arreglarlo x2
+            
+            const sensorApiKey = generateApiKey();
+            // const nextSensorId = await getNextSensorId(); 
+    
+            await queryDuckDB(
+                'INSERT INTO Sensor (location_id, location_name, sensor_id, sensor_name, sensor_category, sensor_meta, sensor_api_key) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [location_id, location_name, 1, sensor_name, sensor_category, sensor_meta, sensorApiKey]
+            );
+    
             // Obtener el sensor recién insertado
             const sensor = await queryDuckDB(
-                'SELECT sensor_id, sensor_api_key FROM Sensor WHERE location_id = $1 AND sensor_name = $2 AND sensor_category = $3 ORDER BY sensor_id DESC LIMIT 1',
-                [location_id, sensor_name, sensor_category]
+                'SELECT sensor_id, sensor_api_key FROM Sensor WHERE sensor_id = $1',
+                [nextSensorId]
             );
-
+    
             if (sensor.length === 0) {
                 return res.status(500).json({ error: 'No se pudo obtener el sensor insertado' });
             }
-
+    
             res.status(201).json({ success: 'true', sensor_api_key: sensor[0].sensor_api_key });
         } catch (error) {
             res.status(500).json({ error: error.message });
