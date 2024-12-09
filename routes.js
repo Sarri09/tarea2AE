@@ -165,3 +165,100 @@ module.exports = function(
         }
     });
 };
+
+// Obtener todos los sensores
+// app.get('/api/v1/sensors', (req, res) => {
+//     const { company_api_key } = req.query;
+
+//     // Verificar la validez de company_api_key
+//     db.get('SELECT * FROM Company WHERE company_api_key = ?', [company_api_key], (err, row) => {
+//         if (err || !row) {
+//             return res.status(401).json({ error: 'Unauthorized' });
+//         }
+//         db.all('SELECT location_id, sensor_id, sensor_name, sensor_category, sensor_meta FROM Sensor', (err, rows) => {
+//             if (err) {
+//                 return res.status(500).json({ error: err.message });
+//             }
+//             res.json(rows);
+//         });
+//     });
+// });
+
+// // Insertar datos del sensor
+// app.post('/api/v1/sensor_data', (req, res) => {
+//     const { sensor_api_key, json_data } = req.body;
+
+//     // Verificar si se recibió json_data y es un array
+//     if (!Array.isArray(json_data)) {
+//         return res.status(400).json({ error: 'Invalid JSON data format' });
+//     }
+
+//     // Verificar si el sensor_api_key es válido
+//     db.get('SELECT * FROM Sensor WHERE sensor_api_key = ?', [sensor_api_key], (err, row) => {
+//         if (err || !row) {
+//             return res.status(401).json({ error: 'Unauthorized' });
+//         }
+
+//         const sensor_id = row.sensor_id;
+
+//         // Insertar los datos del sensor
+//         db.serialize(() => {
+//             db.run('BEGIN TRANSACTION');
+//             const stmt = db.prepare('INSERT INTO Sensor_Data (sensor_id, data_key, data_value) VALUES (?, ?, ?)');
+
+//             try {
+//                 json_data.forEach(({ data_key, data_value }) => {
+//                     // Verificar que cada objeto tenga las propiedades esperadas
+//                     if (typeof data_key !== 'string' || typeof data_value !== 'string') {
+//                         throw new Error('Invalid data format');
+//                     }
+//                     stmt.run(sensor_id, data_key, data_value);
+//                 });
+
+//                 stmt.finalize((err) => {
+//                     if (err) {
+//                         db.run('ROLLBACK');
+//                         return res.status(500).json({ error: err.message });
+//                     }
+//                     db.run('COMMIT');
+//                     res.status(201).json({ success: true });
+//                 });
+//             } catch (error) {
+//                 db.run('ROLLBACK');
+//                 res.status(400).json({ error: error.message });
+//             }
+//         });
+//     });
+// });
+
+// // Consultar datos del sensor
+// app.get('/api/v1/sensor_data', (req, res) => {
+//     const { company_api_key, from, to, sensor_id } = req.query;
+
+//     // Convertir from y to a timestamps si es necesario
+//     const fromTimestamp = parseInt(from, 10);
+//     const toTimestamp = parseInt(to, 10);
+
+//     // Verificar la validez de company_api_key
+//     db.get('SELECT * FROM Company WHERE company_api_key = ?', [company_api_key], (err, row) => {
+//         if (err || !row) {
+//             return res.status(401).json({ error: 'Unauthorized' });
+//         }
+
+//         // Obtener los datos del sensor según los parámetros
+//         let query = 'SELECT * FROM Sensor_Data WHERE sensor_id = ?';
+//         const params = [sensor_id];
+
+//         if (from && to) {
+//             query += ' AND timestamp BETWEEN ? AND ?';
+//             params.push(fromTimestamp, toTimestamp);
+//         }
+
+//         db.all(query, params, (err, rows) => {
+//             if (err) {
+//                 return res.status(500).json({ error: err.message });
+//             }
+//             res.json(rows);
+//         });
+//     });
+// });
