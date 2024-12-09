@@ -144,6 +144,14 @@ Respuesta:
 
 ## Crear nuevo sensor
 
+(por alguna razon no esta mandando el sensor_api_key pero si llega a la base de datos, para verlo se tiene que hacer lo siguiente)
+
+```bash
+curl -X POST http://localhost:9000/query \ 
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT * FROM Company;"}'
+```
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/sensor -H "Content-Type: application/json" -d '{
   "company_api_key":"<company_api_key>",
